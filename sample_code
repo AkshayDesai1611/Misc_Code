@@ -1,0 +1,75 @@
+import re
+
+def extract_email_contents(email_thread, target_email):
+    # Use regex to split the emails
+    emails = re.split(r"\n(?=From:)", email_thread)
+
+    email_contents = []
+
+    for email_text in emails:
+        # Extract the sender's email address from the "From:" header using regex
+        sender_match = re.search(r"From:\s*[^<]*<([^>]+)>", email_text, flags=re.IGNORECASE)
+        sender_email = sender_match.group(1) if sender_match else ""
+
+        # Check if the sender's email address exactly matches the target email
+        if sender_email.lower() == target_email.lower():
+            # Extract the subject from the "Subject:" header using regex
+            subject_match = re.search(r"Subject:\s*([^\n]+)", email_text, flags=re.IGNORECASE)
+            subject = subject_match.group(1) if subject_match else ""
+
+            # Find the start of the body by skipping lines until an empty line
+            body_start_index = next((i for i, line in enumerate(email_text.splitlines()) if not line.strip()), None)
+
+            if body_start_index is not None:
+                body_lines = email_text.splitlines()[body_start_index + 1:]
+                body = "\n".join(body_lines)
+                email_contents.append({"Subject": subject.strip(), "Body": body.strip()})
+
+    # Convert the extracted information to a string
+    output_str = ""
+    for i, content in enumerate(email_contents, start=1):
+        output_str += f"Extracted Email {i}:\nSubject: {content['Subject']}\nBody: {content['Body']}\n\n"
+
+    return output_str
+
+# Rest of the code remains the same
+# Example usage:
+email_thread = """
+From: Sender <sender@example.com>
+To: Recipient <recipient@example.com>
+Subject: Example Email
+
+Hello,
+
+This is the body of the email.
+
+Best regards,
+Sender
+
+From: Another Sender <another.sender@example.com>
+To: Recipient <recipient@example.com>
+Subject: Another Example Email
+
+Hi,
+
+This is the body of another email.
+
+Best regards,
+Another Sender
+
+From: Sender <sender@example.com>
+To: Recipient <recipient@example.com>
+Subject: Example Email
+
+Hello,
+
+This is my next trial.
+
+Best regards,
+Sender
+"""
+
+target_email_address = "sender@example.com"
+output_string = extract_email_contents(email_thread, target_email_address)
+
+print(output_string)
